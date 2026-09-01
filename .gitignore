@@ -1,0 +1,21 @@
+# Anything built from real faculty records. None of this belongs in the repo.
+private/
+overrides.json
+crosswalk.csv
+*crosswalk*
+rows.json
+*.doc
+*.docx
+*.xlsx
+.vita.txt
+vita*.txt
+
+# Local build output from real data
+private.html
+*_private.html
+
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+venv/

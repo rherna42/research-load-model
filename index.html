@@ -1,0 +1,699 @@
+<title>Research Load Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#FAFBFC; --panel:#FFFFFF; --panel-2:#F3F6F9;
+  --ink:#16202B; --ink-2:#3D4E60; --ink-3:#6B7C8D;
+  --rule:#DDE4EB; --rule-2:#EAEFF4;
+  --chrome:#002E57; --chrome-soft:#E6EDF4;
+  --band-1:rgba(0,46,87,.035); --band-2:rgba(0,46,87,.075);
+  --band-3:rgba(0,46,87,.125); --band-4:rgba(0,46,87,.185);
+  --chip-1:#D3DEE8; --chip-2:#A9BFD2; --chip-3:#6E93B4; --chip-4:#2E6491;
+  --d-1:#005FA7; --d-2:#B38B42; --d-3:#296D1D;
+  --d-4:#773169; --d-5:#A27AB8; --d-6:#D11242; --d-7:#6B7C8D;
+  --flag:#8A0F32;
+  --shadow:0 1px 2px rgba(16,32,48,.06), 0 8px 24px rgba(16,32,48,.05);
+  --swarm-surface:#FAFBFC;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12171C; --panel:#1A2028; --panel-2:#222A33;
+    --ink:#E4EAF0; --ink-2:#AFBDCA; --ink-3:#8494A3;
+    --rule:#2C3540; --rule-2:#232B34;
+    --chrome:#65B5E4; --chrome-soft:#1E2A36;
+    --band-1:rgba(148,190,225,.045); --band-2:rgba(148,190,225,.085);
+    --band-3:rgba(148,190,225,.13); --band-4:rgba(148,190,225,.19);
+    --chip-1:#2E3A46; --chip-2:#44586A; --chip-3:#6A889F; --chip-4:#9EBED8;
+    --d-1:#1471B8; --d-2:#8F671E; --d-3:#1AAD00;
+    --d-4:#974988; --d-5:#BC63EE; --d-6:#E85E81; --d-7:#8494A3;
+    --flag:#F07C9E;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+    --swarm-surface:#12171C;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12171C; --panel:#1A2028; --panel-2:#222A33;
+  --ink:#E4EAF0; --ink-2:#AFBDCA; --ink-3:#8494A3;
+  --rule:#2C3540; --rule-2:#232B34;
+  --chrome:#65B5E4; --chrome-soft:#1E2A36;
+  --band-1:rgba(148,190,225,.045); --band-2:rgba(148,190,225,.085);
+  --band-3:rgba(148,190,225,.13); --band-4:rgba(148,190,225,.19);
+  --chip-1:#2E3A46; --chip-2:#44586A; --chip-3:#6A889F; --chip-4:#9EBED8;
+  --d-1:#1471B8; --d-2:#8F671E; --d-3:#1AAD00;
+  --d-4:#974988; --d-5:#BC63EE; --d-6:#E85E81; --d-7:#8494A3;
+  --flag:#F07C9E;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+  --swarm-surface:#12171C;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:Newsreader,Georgia,"Times New Roman",serif;font-weight:600;text-wrap:balance;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+
+.wrap{max-width:1360px;margin:0 auto;padding:28px 22px 72px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;padding-bottom:16px;border-bottom:2px solid var(--chrome);margin-bottom:22px}
+header.top h1{font-size:clamp(28px,3.6vw,40px);line-height:1.05;letter-spacing:-.01em}
+header.top .subwrap{max-width:56ch}
+header.top .sub{color:var(--ink-2);font-size:14px;margin:0}
+header.top .dateline{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-3);margin:7px 0 0;padding-left:9px;border-left:2px solid var(--rule)}
+
+.layout{display:grid;grid-template-columns:302px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:940px){.layout{grid-template-columns:1fr}.rail{position:static !important}}
+
+.rail{position:sticky;top:18px;display:flex;flex-direction:column;gap:14px;
+  max-height:calc(100vh - 36px);overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+.rail::-webkit-scrollbar,.jlist::-webkit-scrollbar{width:8px}
+.rail::-webkit-scrollbar-thumb,.jlist::-webkit-scrollbar-thumb{background:var(--rule);border-radius:4px}
+.rail::-webkit-scrollbar-track,.jlist::-webkit-scrollbar-track{background:transparent}
+@media (max-width:940px){.rail{max-height:none;overflow:visible}}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow)}
+.card>.hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:13px 15px 9px;border-bottom:1px solid var(--rule-2)}
+.card>.bd{padding:13px 15px 15px}
+
+.wrow{display:grid;grid-template-columns:1fr 76px;align-items:center;gap:8px;padding:5px 0}
+.wrow+.wrow{border-top:1px dotted var(--rule-2)}
+.wrow label{font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.tier{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 6px;border-radius:4px;background:var(--panel-2);border:1px solid var(--rule);font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--ink)}
+input[type=number]{width:100%;padding:5px 7px;border:1px solid var(--rule);border-radius:6px;background:var(--ground);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums}
+input[type=number]:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--chrome);outline-offset:2px}
+select{width:100%;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--ground);color:var(--ink);font:inherit;font-size:13.5px}
+
+.cut{display:grid;grid-template-columns:14px 1fr 76px;align-items:center;gap:8px;padding:5px 0}
+.cut+.cut{border-top:1px dotted var(--rule-2)}
+.cut .sq{width:11px;height:11px;border-radius:2px;border:1px solid var(--rule)}
+.cut span{font-size:13.5px;color:var(--ink-2)}
+
+.sw{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13.5px;color:var(--ink-2);cursor:pointer}
+.sw input{accent-color:var(--chrome);width:15px;height:15px;margin:0;flex:none}
+.hint{font-size:12px;color:var(--ink-3);line-height:1.45;margin-top:8px}
+.jlist{margin-top:6px;border-top:1px dotted var(--rule-2);padding-top:4px;max-height:184px;overflow-y:auto;padding-right:4px}
+.jlist[data-off="1"]{opacity:.4}
+.jrow{display:grid;grid-template-columns:14px 1fr auto;gap:8px;align-items:center;padding:3px 0;font-size:12px;color:var(--ink-2);cursor:pointer}
+.jrow input{accent-color:var(--chrome);width:13px;height:13px;margin:0}
+.jrow .ct{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+.jrow span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button.p{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--rule);background:var(--panel-2);color:var(--ink-2);cursor:pointer}
+button.p:hover{border-color:var(--chrome);color:var(--ink)}
+button.p[aria-pressed="true"]{background:var(--chrome-soft);border-color:var(--chrome);color:var(--ink)}
+
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:700px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:12px 14px 13px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.tile .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+.tile .lab{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--ink-2);margin-left:6px}
+.tile .n{font-family:Newsreader,Georgia,serif;font-size:34px;line-height:1.05;margin:4px 0 0 6px;font-variant-numeric:tabular-nums}
+.tile .sm{font-size:11.5px;color:var(--ink-3);margin-left:6px}
+
+.panelhd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.panelhd h2{font-size:20px}
+.legend{display:flex;flex-wrap:wrap;gap:5px}
+.lg{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 7px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.lg .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.lg[aria-pressed="false"]{opacity:.38}
+.lg .ct{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3)}
+
+.chartcard{background:var(--panel);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow);padding:14px 6px 6px}
+.scroller{overflow-x:auto}
+svg{display:block;max-width:100%}
+svg text{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.dot-m{cursor:pointer}
+
+#tip{position:fixed;z-index:50;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;box-shadow:var(--shadow);padding:9px 11px;max-width:280px;font-size:12.5px;line-height:1.45}
+#tip .nm{font-weight:600;font-size:13.5px;color:var(--ink)}
+#tip .dl{color:var(--ink-3);font-size:11.5px;margin-bottom:5px}
+#tip .kv{display:flex;justify-content:space-between;gap:14px;color:var(--ink-2)}
+#tip .kv b{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink)}
+#tip .fl{margin-top:5px;padding-top:5px;border-top:1px solid var(--rule-2);color:var(--flag);font-size:11.5px}
+
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:right;padding:6px 9px;border-bottom:1px solid var(--rule-2);white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
+thead th{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--rule);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:600;cursor:pointer;z-index:2}
+thead th:hover{color:var(--ink)}
+tbody tr:hover{background:var(--panel-2)}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.deptdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.fc{font-size:9px;vertical-align:super;color:var(--ink-3);margin-left:1px}
+.fc::before{content:"+"}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;border:1px solid var(--rule)}
+.no{color:var(--flag);font-weight:600}
+
+footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--rule);color:var(--ink-3);font-size:12.5px;line-height:1.6}
+footer b{color:var(--ink-2);font-weight:600}
+footer ul{margin:8px 0 0;padding-left:18px}
+footer li{margin-bottom:5px}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div style="flex:1 1 380px">
+      <div class="eyebrow">Demonstration data &middot; <span id="nfac"></span> faculty &middot; <span id="winlab">2021&ndash;2026</span></div>
+      <h1>Research Load Model</h1>
+    </div>
+    <div class="subwrap">
+      <p class="sub">A business school decides teaching loads partly on research output. This turns that into something you can argue with: every faculty member is a dot, placed by weighted publication points over a rolling six-year window, inside the load band their score earns. Move the weights or the cutoffs and the room re-sorts itself.</p>
+      <p class="dateline">Synthetic data. No real person appears on this page.</p>
+      </div>
+  </header>
+
+  <div class="layout">
+    <aside class="rail">
+      <section class="card">
+        <div class="hd"><div class="eyebrow">Points per article</div><button class="p" id="reset">Reset</button></div>
+        <div class="bd" id="weights"></div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><div class="eyebrow">Load band cutoffs</div></div>
+        <div class="bd" id="cuts"></div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><div class="eyebrow">Rules</div></div>
+        <div class="bd">
+          <div class="wrow" style="grid-template-columns:1fr 76px">
+            <label>SA floor: journal articles</label>
+            <input type="number" id="saMin" min="0" max="10" step="1" value="2">
+          </div>
+          <label class="sw"><input type="checkbox" id="saForce" checked> Missing SA forces 4/4</label>
+          <label class="sw"><input type="checkbox" id="unratedSA"> Unrated counts for SA, earns no points</label>
+          <div class="wrow" style="grid-template-columns:1fr 96px;padding-top:8px">
+            <label>Window opens</label>
+            <select id="startYr"></select>
+          </div>
+          <p class="hint">Scholarly Academic status is modelled here as a floor on journal articles in the window, with unrated articles counting toward it. Proceedings earn points but never SA. AACSB&rsquo;s real SA test is broader: it admits other intellectual contributions and requires a terminal degree plus currency of engagement.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><div class="eyebrow">House list</div><span class="eyebrow" id="housect"></span></div>
+        <div class="bd">
+          <label class="sw"><input type="checkbox" id="houseOn"> Count house-list journals as ABDC C</label>
+          <div class="jlist" id="houselist" data-off="1"></div>
+          <p class="hint">The unrated journals this faculty publishes in most often. Counts are articles, then distinct authors. Uncheck any journal to leave it unrated.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><div class="eyebrow">Presets</div></div>
+        <div class="bd"><div class="btns" id="presets"></div>
+          <p class="hint" id="presethint">Presets set the weights only. Cutoffs stay where you put them.</p>
+        </div>
+      </section>
+    </aside>
+
+    <main>
+      <div class="tiles" id="tiles"></div>
+
+      <div class="panelhd">
+        <h2 id="viewtitle">Where the faculty land</h2>
+        <div class="btns">
+          <button class="p" data-view="swarm" aria-pressed="true">Combined</button>
+          <button class="p" data-view="facet" aria-pressed="false">By department</button>
+          <button class="p" data-view="table" aria-pressed="false">Table</button>
+        </div>
+      </div>
+
+      <div class="panelhd" id="legendrow"><div class="legend" id="legend"></div></div>
+
+      <div class="chartcard">
+        <div class="scroller" id="plot"></div>
+      </div>
+
+      <footer>
+        <b>The faculty on this page are not real.</b> Departments and journals are: those are public facts about a college and worth seeing in place. Every person here is generated, and no real individual&rsquo;s record is copied, sampled, or recoverable from anything in this repository. The article counts against each journal are synthetic too. The point is the instrument, not the numbers: clone it, point it at your own data, and the shape of your own college appears.
+        <ul>
+          <li><b>The unrated weight is the whole argument.</b> Most business-school output sits in journals no rating list covers. Whatever you set &ldquo;Unrated&rdquo; to decides who earns a release, and at 1 point a high-volume author in unrated outlets outscores a colleague with two A-level papers. Every other control on this page is a detail next to that one.</li>
+          <li><b>Unrated is not one thing.</b> It mixes practitioner outlets, journals a rating list simply does not cover, and journals whose name in a CV was too imprecise to match. A model that gives them all the same number is making a claim it cannot support. The house list is one way out: name the unrated journals your faculty actually publish in and score those separately.</li>
+          <li><b>Two questions, not one.</b> Staying Scholarly Academic and earning a course release are different tests. &ldquo;Unrated counts for SA, earns no points&rdquo; splits them, and the bands move sharply when you do.</li>
+          <li><b>In-press items have no year.</b> Accepted and forthcoming articles carry no publication date, so a model either drops them or dates them to the current year. Dropping them penalises exactly the people with work in the pipeline. Dating them assumes nothing slips. This build dates them and marks them with a raised number in the table.</li>
+          <li><b>A dot is a person.</b> Codes rather than names still leaves department, rank, and an exact publication profile on screen, which is enough for a colleague to identify several people in a minute. Treat any build carrying real records as personnel material, keep it out of version control, and think about who is in the room before you show it.</li>
+        </ul>
+      </footer>
+    </main>
+  </div>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const FAC = [{"id":"ACC-01","dept":"Accounting","rank":"Associate Professor","pubs":[{"y":2023,"r":"A","t":"j","f":1},{"y":2023,"r":"B","t":"p"}]},{"id":"ACC-02","dept":"Accounting","rank":"Full Professor","pubs":[{"y":2024,"r":"other","t":"j","h":13},{"y":2024,"r":"other","t":"j","h":1},{"y":2024,"r":"other","t":"j"},{"y":2023,"r":"other","t":"j","h":10}]},{"id":"ACC-03","dept":"Accounting","rank":"Full Professor","pubs":[{"y":2026,"r":"B","t":"j"},{"y":2025,"r":"other","t":"j","h":11},{"y":2024,"r":"other","t":"p"},{"y":2022,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j","h":7}]},{"id":"ACC-04","dept":"Accounting","rank":"Associate Professor","pubs":[{"y":2026,"r":"B","t":"j"},{"y":2026,"r":"other","t":"j","h":6},{"y":2025,"r":"B","t":"p"},{"y":2025,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j"},{"y":2023,"r":"other","t":"j","h":7},{"y":2022,"r":"other","t":"p"}]},{"id":"ACC-05","dept":"Accounting","rank":"Assistant Professor","pubs":[{"y":2024,"r":"other","t":"j"},{"y":2022,"r":"B","t":"j"}]},{"id":"ACC-06","dept":"Accounting","rank":"Full Professor","pubs":[{"y":2024,"r":"other","t":"j","h":3},{"y":2023,"r":"C","t":"j"},{"y":2022,"r":"C","t":"j"},{"y":2022,"r":"other","t":"j","h":11},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j","h":7},{"y":2021,"r":"other","t":"j","h":8}]},{"id":"ACC-07","dept":"Accounting","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j","h":8},{"y":2022,"r":"C","t":"j"}]},{"id":"ACC-08","dept":"Accounting","rank":"Associate Professor","pubs":[{"y":2022,"r":"other","t":"j"}]},{"id":"ACC-09","dept":"Accounting","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2023,"r":"other","t":"j","h":6}]},{"id":"ACC-10","dept":"Accounting","rank":"Full Professor","pubs":[{"y":2026,"r":"C","t":"j","f":1},{"y":2025,"r":"other","t":"j","h":1},{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"B","t":"j"},{"y":2024,"r":"other","t":"j","h":0},{"y":2022,"r":"B","t":"p"}]},{"id":"ACC-11","dept":"Accounting","rank":"Assistant Professor","pubs":[{"y":2025,"r":"A","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2021,"r":"B","t":"j"}]},{"id":"CIS-01","dept":"CISBA","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"C","t":"j"},{"y":2025,"r":"B","t":"p"},{"y":2025,"r":"other","t":"p"},{"y":2025,"r":"B","t":"j"},{"y":2024,"r":"B","t":"p"},{"y":2024,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j","h":8},{"y":2022,"r":"A","t":"p"},{"y":2022,"r":"other","t":"j","h":10},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"C","t":"p"}]},{"id":"CIS-02","dept":"CISBA","rank":"Assistant Professor","pubs":[{"y":2024,"r":"A","t":"j"},{"y":2023,"r":"A","t":"j"},{"y":2022,"r":"other","t":"p"}]},{"id":"CIS-03","dept":"CISBA","rank":"Full Professor","pubs":[]},{"id":"CIS-04","dept":"CISBA","rank":"Assistant Professor","pubs":[{"y":2022,"r":"other","t":"j"}]},{"id":"CIS-05","dept":"CISBA","rank":"Assistant Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"j","h":4},{"y":2024,"r":"other","t":"p"},{"y":2024,"r":"C","t":"j"},{"y":2021,"r":"other","t":"j","h":8}]},{"id":"CIS-06","dept":"CISBA","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":3},{"y":2025,"r":"other","t":"j","h":5},{"y":2025,"r":"A","t":"j"},{"y":2024,"r":"other","t":"j"},{"y":2023,"r":"other","t":"j"},{"y":2023,"r":"A","t":"j"},{"y":2022,"r":"other","t":"p"}]},{"id":"CIS-07","dept":"CISBA","rank":"Associate Professor","pubs":[{"y":2022,"r":"other","t":"p"}]},{"id":"CIS-08","dept":"CISBA","rank":"Full Professor","pubs":[{"y":2024,"r":"other","t":"j"},{"y":2022,"r":"other","t":"j","h":10}]},{"id":"CIS-09","dept":"CISBA","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2025,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j"},{"y":2021,"r":"B","t":"j"}]},{"id":"ECO-01","dept":"Economics","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"B","t":"p"},{"y":2025,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j","h":11},{"y":2024,"r":"B","t":"j"},{"y":2023,"r":"A*","t":"j"},{"y":2022,"r":"other","t":"j"},{"y":2022,"r":"other","t":"j"}]},{"id":"ECO-02","dept":"Economics","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2022,"r":"B","t":"j"},{"y":2021,"r":"other","t":"j","h":9}]},{"id":"ECO-03","dept":"Economics","rank":"Associate Professor","pubs":[{"y":2023,"r":"other","t":"j","h":1}]},{"id":"ECO-04","dept":"Economics","rank":"Assistant Professor","pubs":[{"y":2026,"r":"B","t":"j"},{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"j","h":13},{"y":2026,"r":"other","t":"p"},{"y":2025,"r":"other","t":"j","h":6},{"y":2025,"r":"other","t":"j"},{"y":2024,"r":"B","t":"j"},{"y":2024,"r":"other","t":"j","h":11},{"y":2024,"r":"other","t":"j","h":2},{"y":2024,"r":"other","t":"j","h":12},{"y":2023,"r":"other","t":"j"},{"y":2023,"r":"other","t":"j","h":0},{"y":2023,"r":"other","t":"j","f":1},{"y":2022,"r":"other","t":"j","h":0},{"y":2022,"r":"other","t":"j"},{"y":2022,"r":"other","t":"p"},{"y":2022,"r":"B","t":"p"},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j","h":7},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j","h":9},{"y":2021,"r":"other","t":"j","h":7}]},{"id":"ECO-05","dept":"Economics","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":4},{"y":2026,"r":"C","t":"j"},{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"j","h":7},{"y":2023,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j","h":5}]},{"id":"ECO-06","dept":"Economics","rank":"Full Professor","pubs":[{"y":2025,"r":"other","t":"j","h":3},{"y":2025,"r":"C","t":"p"},{"y":2024,"r":"other","t":"j","h":6}]},{"id":"ECO-07","dept":"Economics","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":12},{"y":2026,"r":"A","t":"j"},{"y":2026,"r":"C","t":"j"},{"y":2025,"r":"other","t":"p"},{"y":2025,"r":"A","t":"p"},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"other","t":"p"},{"y":2023,"r":"other","t":"j","h":6},{"y":2023,"r":"other","t":"j","h":1},{"y":2023,"r":"other","t":"p"},{"y":2023,"r":"other","t":"j","h":4},{"y":2022,"r":"C","t":"j"},{"y":2021,"r":"other","t":"j"},{"y":2021,"r":"other","t":"j","h":5},{"y":2021,"r":"B","t":"p"},{"y":2021,"r":"other","t":"j"}]},{"id":"FIN-01","dept":"Finance","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j","h":1},{"y":2026,"r":"C","t":"j"},{"y":2026,"r":"C","t":"p"},{"y":2025,"r":"other","t":"j","h":5},{"y":2025,"r":"other","t":"j","h":2},{"y":2025,"r":"C","t":"p"},{"y":2025,"r":"other","t":"j","h":0},{"y":2024,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j","h":5},{"y":2024,"r":"A","t":"p"},{"y":2024,"r":"other","t":"p"},{"y":2023,"r":"other","t":"j","h":2},{"y":2022,"r":"other","t":"p"},{"y":2022,"r":"other","t":"p"},{"y":2022,"r":"C","t":"j"},{"y":2022,"r":"other","t":"j","f":1},{"y":2022,"r":"C","t":"j"},{"y":2022,"r":"A*","t":"j"},{"y":2022,"r":"other","t":"p"},{"y":2021,"r":"A","t":"j"},{"y":2021,"r":"other","t":"j","h":5},{"y":2021,"r":"other","t":"p","f":1}]},{"id":"FIN-02","dept":"Finance","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"p","f":1},{"y":2025,"r":"B","t":"j"},{"y":2024,"r":"other","t":"j","h":9},{"y":2023,"r":"C","t":"j"},{"y":2021,"r":"other","t":"j"}]},{"id":"FIN-03","dept":"Finance","rank":"Assistant Professor","pubs":[{"y":2025,"r":"other","t":"j","h":7}]},{"id":"FIN-04","dept":"Finance","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j","h":9},{"y":2025,"r":"C","t":"p"},{"y":2025,"r":"other","t":"p"},{"y":2025,"r":"A","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j","h":6},{"y":2024,"r":"other","t":"p"},{"y":2022,"r":"other","t":"j","h":2,"f":1}]},{"id":"FIN-05","dept":"Finance","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2025,"r":"other","t":"j","h":8},{"y":2024,"r":"A","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2024,"r":"other","t":"p"},{"y":2021,"r":"other","t":"p"}]},{"id":"FIN-06","dept":"Finance","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"B","t":"j"},{"y":2024,"r":"other","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j","h":5},{"y":2023,"r":"other","t":"j","h":5,"f":1},{"y":2023,"r":"other","t":"j","h":11},{"y":2022,"r":"B","t":"j"}]},{"id":"FIN-07","dept":"Finance","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2023,"r":"B","t":"j"},{"y":2023,"r":"B","t":"j"},{"y":2022,"r":"other","t":"j","h":0},{"y":2022,"r":"other","t":"p","f":1}]},{"id":"MGT-01","dept":"Management","rank":"Assistant Professor","pubs":[{"y":2023,"r":"other","t":"p"}]},{"id":"MGT-02","dept":"Management","rank":"Full Professor","pubs":[{"y":2025,"r":"C","t":"j","f":1},{"y":2025,"r":"A*","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2022,"r":"C","t":"j"}]},{"id":"MGT-03","dept":"Management","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2026,"r":"C","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"other","t":"j","h":3},{"y":2023,"r":"other","t":"j"},{"y":2023,"r":"other","t":"p","f":1},{"y":2022,"r":"B","t":"p","f":1},{"y":2022,"r":"other","t":"j"},{"y":2022,"r":"other","t":"j","h":8,"f":1},{"y":2022,"r":"C","t":"j"},{"y":2021,"r":"other","t":"j","f":1}]},{"id":"MGT-04","dept":"Management","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"A*","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"C","t":"j"},{"y":2025,"r":"other","t":"j","h":3},{"y":2024,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j","h":5},{"y":2024,"r":"other","t":"j","h":5},{"y":2023,"r":"other","t":"j"},{"y":2023,"r":"other","t":"j","h":10,"f":1},{"y":2022,"r":"C","t":"p"},{"y":2022,"r":"other","t":"j","h":9},{"y":2022,"r":"other","t":"p"},{"y":2022,"r":"A*","t":"p"},{"y":2022,"r":"B","t":"j"},{"y":2021,"r":"other","t":"j","h":0,"f":1},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j","h":13}]},{"id":"MGT-05","dept":"Management","rank":"Assistant Professor","pubs":[{"y":2025,"r":"other","t":"p"},{"y":2023,"r":"other","t":"j"},{"y":2023,"r":"other","t":"p"}]},{"id":"MGT-06","dept":"Management","rank":"Full Professor","pubs":[{"y":2025,"r":"B","t":"p"},{"y":2023,"r":"other","t":"j"},{"y":2023,"r":"A","t":"j"},{"y":2022,"r":"C","t":"j"},{"y":2022,"r":"other","t":"p"},{"y":2022,"r":"other","t":"j","h":10},{"y":2022,"r":"other","t":"p"}]},{"id":"MGT-07","dept":"Management","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j","h":2},{"y":2025,"r":"other","t":"j","h":0},{"y":2024,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j","h":11},{"y":2023,"r":"other","t":"j","h":6},{"y":2023,"r":"other","t":"p"},{"y":2023,"r":"A","t":"j"}]},{"id":"MGT-08","dept":"Management","rank":"Associate Professor","pubs":[{"y":2025,"r":"other","t":"j"},{"y":2024,"r":"B","t":"j"},{"y":2023,"r":"other","t":"p"},{"y":2023,"r":"other","t":"p"},{"y":2023,"r":"A","t":"j"},{"y":2021,"r":"other","t":"j"}]},{"id":"MGT-09","dept":"Management","rank":"Associate Professor","pubs":[{"y":2022,"r":"other","t":"j","h":2}]},{"id":"MGT-10","dept":"Management","rank":"Assistant Professor","pubs":[{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"other","t":"j","h":11},{"y":2025,"r":"other","t":"p"},{"y":2022,"r":"other","t":"p","f":1}]},{"id":"MGT-11","dept":"Management","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"p"},{"y":2024,"r":"A","t":"p"},{"y":2024,"r":"C","t":"p"}]},{"id":"MGT-12","dept":"Management","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":2},{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"C","t":"j"},{"y":2024,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j","h":6},{"y":2022,"r":"other","t":"j"},{"y":2022,"r":"other","t":"j","h":5},{"y":2021,"r":"A","t":"j"}]},{"id":"MGT-13","dept":"Management","rank":"Full Professor","pubs":[{"y":2024,"r":"other","t":"j","h":3},{"y":2022,"r":"other","t":"p"}]},{"id":"MGT-14","dept":"Management","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":9},{"y":2025,"r":"B","t":"j"},{"y":2024,"r":"other","t":"j"},{"y":2022,"r":"other","t":"p"}]},{"id":"MKT-01","dept":"Marketing","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":11},{"y":2026,"r":"B","t":"p"},{"y":2026,"r":"B","t":"j"},{"y":2026,"r":"C","t":"p","f":1},{"y":2026,"r":"B","t":"p"},{"y":2026,"r":"other","t":"p","f":1},{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"B","t":"j"},{"y":2024,"r":"B","t":"j"},{"y":2024,"r":"other","t":"j","h":8,"f":1},{"y":2024,"r":"other","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2023,"r":"B","t":"j","f":1},{"y":2023,"r":"other","t":"p"},{"y":2022,"r":"B","t":"p","f":1},{"y":2022,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j"},{"y":2021,"r":"other","t":"j"},{"y":2021,"r":"other","t":"j","h":10}]},{"id":"MKT-02","dept":"Marketing","rank":"Full Professor","pubs":[{"y":2025,"r":"other","t":"j","h":10},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2025,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j"},{"y":2021,"r":"other","t":"j","h":13}]},{"id":"MKT-03","dept":"Marketing","rank":"Full Professor","pubs":[{"y":2026,"r":"C","t":"j"},{"y":2026,"r":"other","t":"j","h":3},{"y":2026,"r":"C","t":"p"},{"y":2026,"r":"other","t":"j"},{"y":2025,"r":"other","t":"p"},{"y":2025,"r":"C","t":"j"},{"y":2025,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j","h":12},{"y":2024,"r":"B","t":"p"},{"y":2023,"r":"C","t":"p"},{"y":2023,"r":"B","t":"j"},{"y":2022,"r":"other","t":"j","h":0},{"y":2022,"r":"other","t":"j","h":3},{"y":2022,"r":"B","t":"p"},{"y":2021,"r":"other","t":"j","h":5}]},{"id":"MKT-04","dept":"Marketing","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j","h":12},{"y":2026,"r":"other","t":"j","h":12},{"y":2025,"r":"other","t":"j","h":5},{"y":2024,"r":"other","t":"j"},{"y":2023,"r":"B","t":"j"},{"y":2022,"r":"A","t":"p"}]},{"id":"MKT-05","dept":"Marketing","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"j","h":1},{"y":2023,"r":"other","t":"j"},{"y":2021,"r":"other","t":"j"}]},{"id":"MKT-06","dept":"Marketing","rank":"Associate Professor","pubs":[{"y":2026,"r":"B","t":"j"},{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"j","h":4},{"y":2026,"r":"C","t":"j"},{"y":2025,"r":"other","t":"p","f":1},{"y":2025,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j","h":1},{"y":2022,"r":"A","t":"j"},{"y":2022,"r":"other","t":"j","h":2,"f":1},{"y":2022,"r":"C","t":"p"},{"y":2022,"r":"other","t":"j","h":10,"f":1},{"y":2022,"r":"other","t":"j","h":1}]},{"id":"MKT-07","dept":"Marketing","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j","h":12},{"y":2025,"r":"other","t":"p"},{"y":2025,"r":"other","t":"j","h":7},{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"other","t":"j","h":6},{"y":2024,"r":"other","t":"j","h":7},{"y":2024,"r":"A*","t":"j"},{"y":2024,"r":"B","t":"j"},{"y":2024,"r":"other","t":"p"},{"y":2024,"r":"other","t":"p"},{"y":2023,"r":"other","t":"p"},{"y":2023,"r":"other","t":"j","h":6},{"y":2022,"r":"other","t":"j","h":11},{"y":2022,"r":"B","t":"j"},{"y":2022,"r":"B","t":"j"},{"y":2021,"r":"other","t":"j"},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"B","t":"j"},{"y":2021,"r":"other","t":"j"},{"y":2021,"r":"other","t":"j"}]},{"id":"MKT-08","dept":"Marketing","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":12},{"y":2026,"r":"A","t":"j"},{"y":2026,"r":"other","t":"j","f":1},{"y":2023,"r":"other","t":"p"},{"y":2021,"r":"B","t":"p"},{"y":2021,"r":"B","t":"j"},{"y":2021,"r":"other","t":"j"}]},{"id":"MKT-09","dept":"Marketing","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2026,"r":"other","t":"j","h":3},{"y":2026,"r":"other","t":"j","h":11},{"y":2026,"r":"A*","t":"j"},{"y":2025,"r":"other","t":"j","h":7},{"y":2025,"r":"B","t":"j"},{"y":2024,"r":"other","t":"j","h":12},{"y":2024,"r":"B","t":"j"},{"y":2022,"r":"other","t":"j","h":6},{"y":2022,"r":"other","t":"j","h":0},{"y":2022,"r":"A","t":"j"},{"y":2022,"r":"other","t":"j","h":5},{"y":2022,"r":"C","t":"j"},{"y":2022,"r":"other","t":"j","h":9},{"y":2022,"r":"other","t":"j","h":7},{"y":2021,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j"}]},{"id":"MKT-10","dept":"Marketing","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"j","h":9},{"y":2026,"r":"other","t":"p"},{"y":2025,"r":"other","t":"j","h":3},{"y":2025,"r":"other","t":"p"},{"y":2025,"r":"other","t":"j"},{"y":2024,"r":"other","t":"j","h":5,"f":1},{"y":2024,"r":"other","t":"p"},{"y":2024,"r":"other","t":"j"},{"y":2022,"r":"other","t":"j","h":0},{"y":2022,"r":"other","t":"j"},{"y":2022,"r":"C","t":"j"},{"y":2021,"r":"other","t":"j","h":4},{"y":2021,"r":"other","t":"j"}]},{"id":"MKT-11","dept":"Marketing","rank":"Assistant Professor","pubs":[{"y":2022,"r":"other","t":"j"},{"y":2021,"r":"other","t":"j","h":10,"f":1}]},{"id":"MKT-12","dept":"Marketing","rank":"Associate Professor","pubs":[{"y":2026,"r":"other","t":"j","h":12},{"y":2024,"r":"other","t":"p"},{"y":2021,"r":"other","t":"j"}]},{"id":"MKT-13","dept":"Marketing","rank":"Assistant Professor","pubs":[{"y":2026,"r":"other","t":"j","h":0},{"y":2023,"r":"other","t":"j","h":6}]},{"id":"MKT-14","dept":"Marketing","rank":"Full Professor","pubs":[{"y":2026,"r":"other","t":"p"},{"y":2026,"r":"other","t":"j"},{"y":2026,"r":"other","t":"j","h":5},{"y":2025,"r":"other","t":"j","h":11},{"y":2025,"r":"C","t":"p"},{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"other","t":"j","h":5},{"y":2025,"r":"B","t":"j"},{"y":2025,"r":"A","t":"j"},{"y":2024,"r":"C","t":"j"},{"y":2023,"r":"other","t":"p"},{"y":2023,"r":"other","t":"p"},{"y":2022,"r":"other","t":"j","h":1},{"y":2022,"r":"other","t":"j","h":7},{"y":2021,"r":"other","t":"j","h":11}]},{"id":"MKT-15","dept":"Marketing","rank":"Assistant Professor","pubs":[{"y":2026,"r":"other","t":"j"},{"y":2025,"r":"other","t":"p"},{"y":2025,"r":"other","t":"j","h":1},{"y":2024,"r":"C","t":"j"},{"y":2023,"r":"other","t":"j"},{"y":2022,"r":"other","t":"p"},{"y":2022,"r":"A","t":"j"},{"y":2021,"r":"other","t":"j","h":5}]}];
+const TIERS = ["A*","A","B","C","other"];
+const HOUSE = [["Journal of Business Leadership",11,10],["Journal of Marketing Development and Competitiveness",10,9],["Small Business Institute Journal",8,7],["Journal of Higher Education Theory and Practice",10,9],["American Journal of Management",5,5],["Journal of Leadership, Accountability and Ethics",18,13],["Journal of Finance and Accountancy",12,11],["Journal of Business Diversity",12,9],["Journal of Management Policy and Practice",7,7],["Journal of Ethical and Legal Issues",8,8],["IUP Journal of International Relations",9,9],["Journal of Strategic Innovation and Sustainability",12,11],["\"Anveshak\" International Journal of Management",9,8],["Academy of Business Education Journal",4,4]];
+const TIERLAB = {"A*":"A*","A":"A","B":"B","C":"C","other":"Unrated"};
+// Departments come from the data. Six get their own hue; a seventh and beyond
+// fold into "Other" in grey rather than inventing colours nobody can tell apart.
+const OTHER = "Other";
+const DEPTS = (() => {
+  const n = {};
+  for (const f of FAC) n[f.dept] = (n[f.dept] || 0) + 1;
+  const ranked = Object.keys(n).sort((a, b) => n[b] - n[a] || a.localeCompare(b));
+  const keep = ranked.slice(0, 6).sort();
+  if (ranked.length > 6) {
+    const spill = new Set(ranked.slice(6));
+    for (const f of FAC) if (spill.has(f.dept)) f.dept = OTHER;
+    keep.push(OTHER);
+  }
+  return keep;
+})();
+const DVAR = Object.fromEntries(DEPTS.map((d, i) => [d, d === OTHER ? "--d-7" : `--d-${i + 1}`]));
+const BANDS = [
+  {key:"b0", name:"4/4",            note:"heaviest teaching"},
+  {key:"b1", name:"3/4",            note:"one course released"},
+  {key:"b2", name:"3/3",            note:"standard research load"},
+  {key:"b3", name:"3/3 + stipend",  note:"load plus research stipend"}
+];
+const PRESETS = {
+  "Steep":   {"A*":12,"A":8,"B":4,"C":2,"other":0.5},
+  "Balanced":{"A*":8,"A":5,"B":3,"C":2,"other":1},
+  "Flat":    {"A*":3,"A":2.5,"B":2,"C":1.5,"other":1}
+};
+
+let W = Object.assign({}, PRESETS.Balanced);
+let CUT = {b1:3, b2:6, b3:12};
+let saMin = 2, saForce = true, startYr = 2021, unratedNoPts = false;
+let houseOn = false, houseSel = new Set(HOUSE.map((h,i) => i));
+let view = "swarm";
+let hidden = new Set();
+let sortKey = "pts", sortDir = -1;
+
+const $ = s => document.querySelector(s);
+const cvar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- controls ---------- */
+function wlabel(t){
+  if(t === "other") return "no ABDC rating";
+  if(t === "C" && houseOn) return "ABDC C + list";
+  return "ABDC " + t;
+}
+function syncLabels(){
+  document.querySelectorAll(".wlab").forEach(e => { e.textContent = wlabel(e.dataset.t); });
+}
+function buildHouse(){
+  $("#houselist").innerHTML = HOUSE.map((h,i) =>
+    `<label class="jrow" title="${h[0]}"><input type="checkbox" data-h="${i}" ${houseSel.has(i)?"checked":""}>
+      <span class="t">${h[0]}</span><span class="ct">${h[1]} / ${h[2]}</span></label>`).join("");
+  $("#houselist").querySelectorAll("input").forEach(i => i.addEventListener("change", e => {
+    const k = +e.target.dataset.h;
+    if(e.target.checked) houseSel.add(k); else houseSel.delete(k);
+    render();
+  }));
+  syncHouse();
+}
+function syncHouse(){
+  $("#houselist").dataset.off = houseOn ? "0" : "1";
+  $("#houselist").querySelectorAll("input").forEach(i => { i.disabled = !houseOn; });
+  const n = HOUSE.reduce((a,h,i) => a + (houseOn && houseSel.has(i) ? h[1] : 0), 0);
+  $("#housect").textContent = houseOn ? n + " items as C" : "off";
+  syncLabels();
+}
+function syncUnrated(){
+  const row = $("#weights").querySelector('input[data-w="other"]');
+  if(!row) return;
+  row.disabled = unratedNoPts;
+  row.parentElement.style.opacity = unratedNoPts ? .42 : 1;
+  row.parentElement.title = unratedNoPts ? "Unrated articles are scored at zero while the SA-only rule is on" : "";
+}
+function buildWeights(){
+  $("#weights").innerHTML = TIERS.map(t =>
+    `<div class="wrow"><label><span class="tier">${TIERLAB[t]}</span><span class="wlab" data-t="${t}">${wlabel(t)}</span></label>
+     <input type="number" data-w="${t}" min="0" max="50" step="0.5" value="${W[t]}"></div>`).join("");
+  $("#weights").querySelectorAll("input").forEach(i =>
+    i.addEventListener("input", e => { const v=parseFloat(e.target.value); W[e.target.dataset.w] = isFinite(v)?Math.min(100,Math.max(0,v)):0; render(); }));
+  syncUnrated();
+}
+function buildCuts(){
+  const rows = [
+    {k:"b3", lab:"3/3 + stipend at", sq:"--chip-4"},
+    {k:"b2", lab:"3/3 at",           sq:"--chip-3"},
+    {k:"b1", lab:"3/4 at",           sq:"--chip-2"},
+    {k:"b0", lab:"4/4 below that",   sq:"--chip-1"}
+  ];
+  $("#cuts").innerHTML = rows.map(r => r.k==="b0"
+    ? `<div class="cut"><i class="sq" style="background:var(${r.sq})"></i><span>${r.lab}</span><span class="mono" style="text-align:right;font-size:13px;color:var(--ink-3)">&mdash;</span></div>`
+    : `<div class="cut"><i class="sq" style="background:var(${r.sq})"></i><span>${r.lab}</span><input type="number" data-c="${r.k}" min="0" max="500" step="0.5" value="${CUT[r.k]}"></div>`
+  ).join("");
+  $("#cuts").querySelectorAll("input").forEach(i =>
+    i.addEventListener("input", e => { const v=parseFloat(e.target.value); if(isFinite(v)) CUT[e.target.dataset.c]=Math.min(MAXCUT,Math.max(0,v)); render(); }));
+}
+function syncCutInputs(){
+  $("#cuts").querySelectorAll("input").forEach(i => { i.value = CUT[i.dataset.c]; });
+}
+function buildPresets(){
+  $("#presets").innerHTML = Object.keys(PRESETS).map(k =>
+    `<button class="p" data-preset="${k}" aria-pressed="${k==='Balanced'}">${k}</button>`).join("");
+  $("#presets").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    W = Object.assign({}, PRESETS[b.dataset.preset]);
+    $("#presets").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
+    buildWeights(); render();
+  }));
+}
+function buildYears(){
+  const s = $("#startYr");
+  s.innerHTML = [2019,2020,2021,2022,2023].map(y => `<option value="${y}" ${y===2021?"selected":""}>${y}</option>`).join("");
+  s.addEventListener("change", e => { startYr = +e.target.value; render(); });
+}
+function markPresetCustom(){
+  const cur = $("#presets");
+  if(!cur) return;
+  cur.querySelectorAll("button").forEach(b => {
+    const p = PRESETS[b.dataset.preset];
+    b.setAttribute("aria-pressed", String(TIERS.every(t => Math.abs(p[t]-W[t])<1e-9)));
+  });
+}
+
+/* ---------- model ---------- */
+function score(f){
+  const cnt = {"A*":0,"A":0,"B":0,"C":0,"other":0};
+  let journals = 0, fwd = 0;
+  for(const p of f.pubs){
+    if(p.y < startYr) continue;
+    // proceedings count too, at their ABDC rating when the outlet is listed, otherwise unrated
+    let tier = p.r;
+    if(tier === "other" && p.h !== undefined && houseOn && houseSel.has(p.h)) tier = "C";
+    cnt[tier]++;
+    if(p.t === "j") journals++;
+    if(p.f) fwd++;
+  }
+  const pts = TIERS.reduce((s,t) => s + ((t === "other" && unratedNoPts) ? 0 : W[t]*cnt[t]), 0);
+  const sa = journals >= saMin;
+  let band = 0;
+  if(pts >= CUT.b3) band = 3; else if(pts >= CUT.b2) band = 2; else if(pts >= CUT.b1) band = 1;
+  if(!sa && saForce) band = 0;
+  return {...f, cnt, journals, fwd, pts, sa, band, forced: !sa && saForce && pts >= CUT.b1};
+}
+function model(){ return FAC.map(score); }
+
+/* ---------- tiles ---------- */
+function drawTiles(rows){
+  const shown = rows.filter(r => !hidden.has(r.dept));
+  const n = shown.length || 1;
+  $("#tiles").innerHTML = [0,1,2,3].map(bi => {
+    const c = shown.filter(r => r.band === bi).length;
+    return `<div class="tile"><i class="bar" style="background:var(--chip-${bi+1})"></i>
+      <div class="lab">${BANDS[bi].name}</div>
+      <div class="n">${c}</div>
+      <div class="sm">${Math.round(100*c/n)}% &middot; ${BANDS[bi].note}</div></div>`;
+  }).join("");
+}
+
+/* ---------- legend ---------- */
+function drawLegend(rows){
+  $("#legend").innerHTML = DEPTS.map(d => {
+    const c = rows.filter(r => r.dept === d).length;
+    return `<button class="lg" data-d="${d}" aria-pressed="${!hidden.has(d)}">
+      <i class="dot" style="background:var(${DVAR[d]})"></i>${d}<span class="ct">${c}</span></button>`;
+  }).join("");
+  $("#legend").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const d = b.dataset.d;
+    if(hidden.has(d)) hidden.delete(d); else hidden.add(d);
+    if(hidden.size === DEPTS.length) hidden.clear();
+    render();
+  }));
+}
+
+/* ---------- swarm geometry ---------- */
+function swarm(items, x, r, gap){
+  const placed = [];
+  const sorted = items.slice().sort((a,b) => x(a) - x(b));
+  const step = 2*r + gap;
+  for(const it of sorted){
+    const px = x(it);
+    let y = 0, k = 0;
+    for(;;){
+      const cand = (k === 0) ? 0 : (k % 2 ? Math.ceil(k/2)*step : -Math.ceil(k/2)*step);
+      let ok = true;
+      for(const p of placed){
+        if(Math.abs(p.x - px) >= step) continue;
+        if(Math.hypot(p.x - px, p.y - cand) < step - 0.01){ ok = false; break; }
+      }
+      if(ok){ y = cand; break; }
+      k++; if(k > 400){ y = cand; break; }
+    }
+    placed.push({x:px, y, d:it});
+  }
+  return placed;
+}
+
+/* ---------- chart ---------- */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+const MAXCUT = 500;
+function axisMax(rows){
+  const dataMax = rows.length ? Math.max(...rows.map(r => r.pts)) : 0;
+  // the axis follows the data; a cutoff parked far past it does not stretch the scale
+  const m = Math.max(10, dataMax, Math.min(CUT.b3 * 1.15, dataMax * 1.4 + 10));
+  return Math.ceil(m/5)*5;
+}
+function ticks(max){
+  if(!isFinite(max) || max <= 0) return [0];
+  let step = Math.pow(10, Math.floor(Math.log10(max/8)));
+  for(const mult of [1, 2, 5, 10]){ if(max/(step*mult) <= 12){ step *= mult; break; } }
+  const out = [];
+  for(let v = 0; v <= max && out.length < 40; v += step) out.push(+v.toFixed(2));
+  return out;
+}
+
+function drawSwarm(rows){
+  const host = $("#plot");
+  const W0 = Math.max(560, host.clientWidth || 700);
+  const padL = 16, padR = 16, padT = 66, padB = 46;
+  const shown = rows.filter(r => !hidden.has(r.dept));
+  const max = axisMax(rows);
+  const x = v => padL + (W0 - padL - padR) * (Math.min(v, max) / max);
+  const r = shown.length > 45 ? 6 : 7;
+  const pts = swarm(shown, d => x(d.pts), r, 2.5);
+  const half = pts.length ? Math.max(...pts.map(p => Math.abs(p.y))) : 0;
+  const plotH = Math.max(210, 2*half + 2*r + 26);
+  const cy = padT + plotH/2;
+  const H = padT + plotH + padB;
+
+  let s = `<svg viewBox="0 0 ${W0} ${H}" width="${W0}" height="${H}" role="img" aria-label="Faculty research points, one dot per faculty member, grouped into teaching load bands">`;
+  s += bandLayer(x, max, padT, plotH, shown, W0);
+  s += gridLayer(x, max, padT, plotH);
+  for(const p of pts) s += markup(p.d, p.x, cy + p.y, r);
+  s += axisLayer(x, max, padT + plotH);
+  s += `</svg>`;
+  host.innerHTML = s;
+  wireMarks(shown);
+  wireDrag(host, x, max, W0, padL, padR);
+}
+
+function bandLayer(x, max, top, h, shown, W0){
+  const edges = [0, CUT.b1, CUT.b2, CUT.b3, max];
+  let s = `<g>`;
+  for(let i = 0; i < 4; i++){
+    const a = Math.min(edges[i], max), b = Math.min(edges[i+1], max);
+    if(b <= a) continue;
+    const c = shown.filter(r => r.band === i).length;
+    const w = x(b) - x(a);
+    s += `<rect x="${x(a)}" y="${top}" width="${w}" height="${h}" fill="var(--band-${i+1})"></rect>`;
+    const mx = (x(a)+x(b))/2;
+    if(w > 26){
+      s += `<text x="${mx}" y="${top-22}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink-2)" letter-spacing=".04em">${BANDS[i].name}</text>`;
+      s += `<text x="${mx}" y="${top-8}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${c}</text>`;
+    }
+  }
+  for(const k of ["b1","b2","b3"]){
+    if(CUT[k] <= 0 || CUT[k] >= max) continue;
+    const px = x(CUT[k]);
+    s += `<line x1="${px}" y1="${top-48}" x2="${px}" y2="${top+h}" stroke="var(--chrome)" stroke-width="1.5" stroke-dasharray="4 3" opacity=".75"></line>`;
+    s += `<g class="handle" data-k="${k}" style="cursor:ew-resize">
+      <rect x="${px-19}" y="${top-50}" width="38" height="18" rx="9" fill="var(--panel)" stroke="var(--chrome)" stroke-width="1.2"></rect>
+      <text x="${px}" y="${top-37}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--chrome)">${CUT[k]}</text>
+      <rect x="${px-21}" y="${top-52}" width="42" height="${h+54}" fill="transparent"></rect></g>`;
+  }
+  return s + `</g>`;
+}
+function gridLayer(x, max, top, h){
+  return ticks(max).map(v => `<line x1="${x(v)}" y1="${top}" x2="${x(v)}" y2="${top+h}" stroke="var(--rule-2)" stroke-width="1"></line>`).join("");
+}
+function axisLayer(x, max, y){
+  let s = `<line x1="${x(0)}" y1="${y}" x2="${x(max)}" y2="${y}" stroke="var(--rule)" stroke-width="1"></line>`;
+  s += ticks(max).map(v => `<text x="${x(v)}" y="${y+15}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${v}</text>`).join("");
+  s += `<text x="${x(0)}" y="${y+32}" font-size="10.5" fill="var(--ink-3)" letter-spacing=".1em">RESEARCH POINTS, ${startYr}\u20132026</text>`;
+  return s;
+}
+function markup(d, cx, cy, r){
+  const col = `var(${DVAR[d.dept]})`;
+  const base = `<circle class="dot-m" data-n="${d.id}" cx="${cx}" cy="${cy}" r="${r}"`;
+  if(d.sa) return base + ` fill="${col}" stroke="var(--swarm-surface)" stroke-width="2"></circle>`;
+  return `<g class="dot-m" data-n="${d.id}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--swarm-surface)" stroke="${col}" stroke-width="2.2"></circle>
+    <line x1="${cx-r*0.5}" y1="${cy+r*0.5}" x2="${cx+r*0.5}" y2="${cy-r*0.5}" stroke="${col}" stroke-width="1.6"></line></g>`;
+}
+
+function drawFacet(rows){
+  const host = $("#plot");
+  const W0 = Math.max(560, host.clientWidth || 700);
+  const padL = 108, padR = 16, padT = 66, padB = 46;
+  const shown = rows.filter(r => !hidden.has(r.dept));
+  const max = axisMax(rows);
+  const x = v => padL + (W0 - padL - padR) * (Math.min(v, max) / max);
+  const r = 6;
+  const groups = DEPTS.filter(d => !hidden.has(d));
+  let rowsGeo = [], y = padT;
+  for(const d of groups){
+    const items = shown.filter(s => s.dept === d);
+    const p = swarm(items, o => x(o.pts), r, 2);
+    const half = p.length ? Math.max(...p.map(q => Math.abs(q.y))) : 0;
+    const h = Math.max(46, 2*half + 2*r + 14);
+    rowsGeo.push({d, p, top:y, h}); y += h + 8;
+  }
+  const totalH = y - 8;
+  const H = padT + (totalH - padT) + padB;
+
+  let s = `<svg viewBox="0 0 ${W0} ${H}" width="${W0}" height="${H}" role="img" aria-label="Faculty research points by department">`;
+  const edges = [0, CUT.b1, CUT.b2, CUT.b3, max];
+  for(let i = 0; i < 4; i++){
+    const a = Math.min(edges[i], max), b = Math.min(edges[i+1], max);
+    if(b <= a) continue;
+    s += `<rect x="${x(a)}" y="${padT}" width="${x(b)-x(a)}" height="${totalH-padT}" fill="var(--band-${i+1})"></rect>`;
+    const mx = (x(a)+x(b))/2;
+    if(x(b)-x(a) > 26){
+      s += `<text x="${mx}" y="${padT-22}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink-2)">${BANDS[i].name}</text>`;
+      s += `<text x="${mx}" y="${padT-8}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${shown.filter(q=>q.band===i).length}</text>`;
+    }
+  }
+  for(const k of ["b1","b2","b3"]){
+    if(CUT[k] <= 0 || CUT[k] >= max) continue;
+    s += `<line x1="${x(CUT[k])}" y1="${padT-48}" x2="${x(CUT[k])}" y2="${totalH}" stroke="var(--chrome)" stroke-width="1.5" stroke-dasharray="4 3" opacity=".7"></line>`;
+  }
+  for(const g of rowsGeo){
+    const mid = g.top + g.h/2;
+    s += `<text x="${padL-12}" y="${mid-4}" text-anchor="end" font-size="12" font-weight="600" fill="var(--ink-2)">${g.d}</text>`;
+    s += `<text x="${padL-12}" y="${mid+10}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">${g.p.length} faculty</text>`;
+    for(const q of g.p) s += markup(q.d, q.x, mid + q.y, r);
+  }
+  s += axisLayer(x, max, totalH + 10);
+  s += `</svg>`;
+  host.innerHTML = s;
+  wireMarks(shown);
+}
+
+function drawTable(rows){
+  const shown = rows.filter(r => !hidden.has(r.dept));
+  const get = (r,k) => k === "band" ? r.band : k === "pts" ? r.pts : k === "j" ? r.journals
+      : k === "id" ? r.id : k === "dept" ? r.dept : k === "rank" ? r.rank : (r.cnt[k] || 0);
+  const sorted = shown.slice().sort((a,b) => {
+    const va = get(a, sortKey), vb = get(b, sortKey);
+    if(va < vb) return -sortDir; if(va > vb) return sortDir;
+    return a.id.localeCompare(b.id);
+  });
+  const cols = [["id","ID"],["dept","Dept"],["rank","Rank"],["A*","A*"],["A","A"],["B","B"],["C","C"],["other","Unrated"],["j","Journal arts."],["pts","Points"],["band","Band"]];
+  let s = `<div style="padding:0 8px 8px"><table><thead><tr>`;
+  s += cols.map(c => `<th data-k="${c[0]}">${c[1]}${sortKey===c[0] ? (sortDir>0?" \u25b2":" \u25bc") : ""}</th>`).join("");
+  s += `</tr></thead><tbody>`;
+  for(const r of sorted){
+    s += `<tr><td class="num"><span class="deptdot" style="background:var(${DVAR[r.dept]})"></span>${r.id}</td>
+      <td>${r.dept}</td><td style="color:var(--ink-3)">${r.rank.replace(" Professor","")}</td>`;
+    s += TIERS.map(t => `<td class="num" style="${r.cnt[t]?"":"color:var(--ink-3)"}">${r.cnt[t]||"\u00b7"}</td>`).join("");
+    s += `<td class="num ${r.sa?"":"no"}"${r.fwd?` title="includes ${r.fwd} in press, dated 2026"`:""}>${r.journals}${r.fwd?`<span class="fc">${r.fwd}</span>`:""}${r.sa?"":" \u2717"}</td>`;
+    s += `<td class="num" style="font-weight:600">${(+r.pts.toFixed(1))}</td>`;
+    s += `<td><span class="pill" style="background:var(--chip-${r.band+1});color:${r.band>=2?"var(--ground)":"var(--ink)"}">${BANDS[r.band].name}</span>${r.forced?' <span class="no" title="Forced down by the SA floor">\u2193</span>':""}</td></tr>`;
+  }
+  s += `</tbody></table></div>`;
+  $("#plot").innerHTML = s;
+  $("#plot").querySelectorAll("th").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.k;
+    if(sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = (k==="id"||k==="dept"||k==="rank") ? 1 : -1; }
+    render();
+  }));
+}
+
+/* ---------- tooltip + drag ---------- */
+let MODEL = [];
+function wireMarks(shown){
+  const tip = $("#tip");
+  $("#plot").querySelectorAll(".dot-m").forEach(el => {
+    el.addEventListener("pointerenter", e => {
+      const d = MODEL.find(m => m.id === el.dataset.n); if(!d) return;
+      const br = TIERS.filter(t => d.cnt[t]).map(t => `${d.cnt[t]}\u00d7${TIERLAB[t]}${(t === "other" && unratedNoPts) ? " (0 pts)" : ""}`).join(", ") || "nothing in window";
+      tip.innerHTML = `<div class="nm mono">${d.id}</div>
+        <div class="dl">${d.dept} \u00b7 ${d.rank}</div>
+        <div class="kv"><span>Points</span><b>${(+d.pts.toFixed(1))}</b></div>
+        <div class="kv"><span>Journal articles</span><b>${d.journals}</b></div>
+        <div class="kv"><span>Band</span><b>${BANDS[d.band].name}</b></div>
+        <div style="margin-top:5px;color:var(--ink-3);font-size:11.5px">${br}</div>
+        ${d.fwd ? `<div style="color:var(--ink-3);font-size:11.5px">${d.fwd} in press, dated 2026</div>` : ""}
+        ${d.sa ? "" : `<div class="fl">Below the SA floor (${saMin} journal articles)${d.forced ? " \u2014 held at 4/4" : ""}</div>`}`;
+      tip.style.opacity = 1;
+    });
+    el.addEventListener("pointermove", e => {
+      const t = $("#tip"), w = t.offsetWidth, h = t.offsetHeight;
+      t.style.left = Math.min(e.clientX + 14, innerWidth - w - 10) + "px";
+      t.style.top  = Math.max(8, e.clientY - h - 14) + "px";
+    });
+    el.addEventListener("pointerleave", () => { $("#tip").style.opacity = 0; });
+  });
+}
+function wireDrag(host, x, max, W0, padL, padR){
+  host.querySelectorAll(".handle").forEach(g => {
+    g.addEventListener("pointerdown", ev => {
+      ev.preventDefault();
+      const k = g.dataset.k;
+      const move = e => {
+        const svg = host.querySelector("svg");
+        if(!svg) return;
+        const box = svg.getBoundingClientRect();
+        if(!box.width) return;
+        const sx = (e.clientX - box.left) * (W0 / box.width);
+        let v = (sx - padL) / (W0 - padL - padR) * max;
+        if(!isFinite(v)) return;
+        v = Math.max(0, Math.round(v * 2) / 2);
+        if(k === "b1") v = Math.min(v, CUT.b2);
+        if(k === "b2") v = Math.min(Math.max(v, CUT.b1), CUT.b3);
+        if(k === "b3") v = Math.max(v, CUT.b2);
+        CUT[k] = v; syncCutInputs(); render();
+      };
+      const up = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); };
+      addEventListener("pointermove", move); addEventListener("pointerup", up);
+    });
+  });
+}
+
+/* ---------- render ---------- */
+function render(){
+  MODEL = model();
+  markPresetCustom(); syncHouse();
+  $("#winlab").textContent = startYr + "\u20132026";
+  $("#nfac").textContent = FAC.length;
+  drawTiles(MODEL); drawLegend(MODEL);
+  $("#legendrow").style.display = view === "table" ? "none" : "";
+  if(view === "swarm") drawSwarm(MODEL);
+  else if(view === "facet") drawFacet(MODEL);
+  else drawTable(MODEL);
+}
+
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+  view = b.dataset.view;
+  document.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  $("#viewtitle").textContent = view === "table" ? "Every faculty member, scored" : view === "facet" ? "Where each department lands" : "Where the faculty land";
+  render();
+}));
+$("#saMin").addEventListener("input", e => { const v = parseInt(e.target.value,10); saMin = isFinite(v) ? Math.max(0,v) : 0; render(); });
+$("#saForce").addEventListener("change", e => { saForce = e.target.checked; render(); });
+$("#unratedSA").addEventListener("change", e => { unratedNoPts = e.target.checked; syncUnrated(); render(); });
+$("#houseOn").addEventListener("change", e => { houseOn = e.target.checked; syncHouse(); render(); });
+$("#reset").addEventListener("click", () => {
+  W = Object.assign({}, PRESETS.Balanced); CUT = {b1:3,b2:6,b3:12};
+  saMin = 2; saForce = true; startYr = 2021; unratedNoPts = false; hidden.clear();
+  houseOn = false; houseSel = new Set(HOUSE.map((h,i) => i)); $("#houseOn").checked = false;
+  $("#saMin").value = 2; $("#saForce").checked = true;
+  $("#unratedSA").checked = false; $("#startYr").value = 2021;
+  buildWeights(); buildHouse(); syncCutInputs(); render();
+});
+
+buildWeights(); buildCuts(); buildPresets(); buildYears(); buildHouse(); render();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+</script>

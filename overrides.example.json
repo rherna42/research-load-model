@@ -1,0 +1,33 @@
+{
+  "_comment": "Copy to overrides.json and edit. overrides.json is gitignored because it holds real names and citations.",
+
+  "dept_abbr": {
+    "Accounting": "ACC", "Economics": "ECO", "Finance": "FIN",
+    "Information Systems": "INF", "Management": "MGT", "Marketing": "MKT"
+  },
+
+  "dept_fix": {
+    "Doe, Jane": "Marketing"
+  },
+
+  "drop": [
+    {"name": "Doe, Jane", "match": "A Title That Belongs To A Colleague"}
+  ],
+
+  "as_proceedings": [
+    "A Conference Paper Title The Classifier Read As A Journal Article"
+  ],
+
+  "journal_fix": {
+    "A Citation Fragment": "The Journal It Actually Appeared In"
+  },
+
+  "house": [
+    "Journal of Applied Business Practice",
+    "Review of Business Cases and Teaching"
+  ],
+
+  "merge": {
+    "Journal of Applied Busines Practice": "Journal of Applied Business Practice"
+  }
+}
