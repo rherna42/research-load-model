@@ -66,7 +66,11 @@ def main():
                 y = rng.choices(range(2021, 2027), weights=[.14,.19,.16,.17,.19,.15])[0]
                 tier = pick(rng, TIERS)
                 proc = rng.random() < .26
-                rec = {"y": y, "r": tier, "t": "p" if proc else "j"}
+                # Almost no conference proceeding is on the ABDC list.
+                if proc and rng.random() < .96: tier = "other"
+                # An ABDC-listed proceeding is a peer-reviewed journal outlet: it carries
+                # the ABDC points and counts toward SA. An unlisted one never counts toward SA.
+                rec = {"y": y, "r": tier, "t": "p" if (proc and tier == "other") else "j"}
                 if tier == "other" and not proc and rng.random() < .64:
                     rec["h"] = rng.randrange(len(HOUSE))
                 if rng.random() < .045: rec["f"] = 1
