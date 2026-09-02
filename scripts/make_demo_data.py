@@ -76,7 +76,10 @@ def main():
                 if rng.random() < .045: rec["f"] = 1
                 pubs.append(rec)
             pubs.sort(key=lambda p: -p["y"])
-            people.append({"id": f"{abbr}-{i:02d}", "dept": dept, "rank": rank, "pubs": pubs})
+            # Letters, not numbers. Real builds use ACC-01; the demo uses ACC-A, so a
+            # demo code can never be mistaken for a real person's code.
+            tag = chr(ord("A") + i - 1) if i <= 26 else f"A{i-26}"
+            people.append({"id": f"{abbr}-{tag}", "dept": dept, "rank": rank, "pubs": pubs})
     people.sort(key=lambda p: p["id"])
 
     counts, authors = {}, {}
