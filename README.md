@@ -16,7 +16,9 @@ from anything in this repository.
 ## What it does
 
 - **Weights by rating.** Points per article for A\*, A, B, C, and unrated, from the
-  ABDC Journal Quality List in force at the article's publication year.
+  ABDC Journal Quality List in force at the article's publication year. A proceeding
+  in a listed outlet is treated as a peer-reviewed journal article, for points and for
+  the Scholarly Academic floor alike; an unlisted one earns points but never SA.
 - **Bands with movable cutoffs.** Four loads, from 4/4 up to 3/3 plus a stipend.
   Type the thresholds or drag them on the chart.
 - **A Scholarly Academic floor.** Set a minimum number of journal articles in the
