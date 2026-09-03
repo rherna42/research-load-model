@@ -162,12 +162,12 @@ footer li{margin-bottom:5px}
 <div class="wrap">
   <header class="top">
     <div style="flex:1 1 380px">
-      <div class="eyebrow">Demonstration data &middot; <span id="nfac"></span> faculty &middot; <span id="winlab">2021&ndash;2026</span></div>
+      <div class="eyebrow">Tenure-line faculty, names removed &middot; <span id="nfac"></span> people &middot; <span id="winlab">2021&ndash;2026</span></div>
       <h1>Research Load Model</h1>
     </div>
     <div class="subwrap">
       <p class="sub">A business school decides teaching loads partly on research output. This turns that into something you can argue with: every faculty member is a dot, placed by weighted publication points over a rolling six-year window, inside the load band their score earns. Move the weights or the cutoffs and the room re-sorts itself.</p>
-      <p class="dateline">Synthetic data. No real person appears on this page.</p>
+      <p class="dateline">Faculty activity export of 1 September 2026</p>
       </div>
   </header>
 
@@ -236,14 +236,14 @@ footer li{margin-bottom:5px}
       </div>
 
       <footer>
-        <b>The faculty on this page are not real.</b> Departments and journals are: those are public facts about a college and worth seeing in place. Every person here is generated, and no real individual&rsquo;s record is copied, sampled, or recoverable from anything in this repository. The article counts against each journal are synthetic too. The point is the instrument, not the numbers: clone it, point it at your own data, and the shape of your own college appears.
+        <b>These are real faculty with their names removed.</b> Sixty-three tenure-line faculty at one business school and 392 publications dated 2021 or later, taken from a faculty activity system export of 1 September 2026 and rated against the ABDC Journal Quality List in force at each article&rsquo;s publication year. Names are stripped and each department is reduced to a single letter, so the dots can still be grouped without naming anyone or any unit. Ranks, journals, years, and ratings are exactly what the records say.
         <ul>
           <li><b>The unrated weight is the whole argument.</b> Most business-school output sits in journals no rating list covers. Whatever you set &ldquo;Unrated&rdquo; to decides who earns a release, and at 1 point a high-volume author in unrated outlets outscores a colleague with two A-level papers. Every other control on this page is a detail next to that one.</li>
           <li><b>Unrated is not one thing.</b> It mixes practitioner outlets, journals a rating list simply does not cover, and journals whose name in a CV was too imprecise to match. A model that gives them all the same number is making a claim it cannot support. The house list is one way out: name the unrated journals your faculty actually publish in and score those separately.</li>
           <li><b>A listed proceeding is a journal article.</b> Conference proceedings and chapters are scored at their ABDC rating when the outlet is on the list, and an outlet the list covers is a peer-reviewed journal outlet, so those items count toward the Scholarly Academic floor as well. Unlisted proceedings earn points and never count toward SA. In practice almost nothing in this category is listed, which is why the distinction is easy to get wrong.</li>
           <li><b>Two questions, not one.</b> Staying Scholarly Academic and earning a course release are different tests. &ldquo;Unrated counts for SA, earns no points&rdquo; splits them, and the bands move sharply when you do.</li>
           <li><b>In-press items have no year.</b> Accepted and forthcoming articles carry no publication date, so a model either drops them or dates them to the current year. Dropping them penalises exactly the people with work in the pipeline. Dating them assumes nothing slips. This build dates them and marks them with a raised number in the table.</li>
-          <li><b>A dot is a person.</b> Codes rather than names still leaves department, rank, and an exact publication profile on screen, which is enough for a colleague to identify several people in a minute. Treat any build carrying real records as personnel material, keep it out of version control, and think about who is in the room before you show it.</li>
+          <li><b>A dot is a person, and dropping the name does not undo that.</b> Rank, a department grouping, and an exact publication profile are still on screen, which is enough for a colleague at the same school to place the more prolific people. Group sizes alone narrow down which letter is which unit. The page also puts a teaching load on each of them. That is a model output and an argument worth having, not a decision anyone has made. Read it that way.</li>
         </ul>
       </footer>
     </main>
@@ -256,22 +256,13 @@ const FAC = __DATA__;
 const TIERS = ["A*","A","B","C","other"];
 const HOUSE = __HOUSE__;
 const TIERLAB = {"A*":"A*","A":"A","B":"B","C":"C","other":"Unrated"};
-// Departments come from the data. Six get their own hue; a seventh and beyond
-// fold into "Other" in grey rather than inventing colours nobody can tell apart.
-const OTHER = "Other";
-const DEPTS = (() => {
-  const n = {};
-  for (const f of FAC) n[f.dept] = (n[f.dept] || 0) + 1;
-  const ranked = Object.keys(n).sort((a, b) => n[b] - n[a] || a.localeCompare(b));
-  const keep = ranked.slice(0, 6).sort();
-  if (ranked.length > 6) {
-    const spill = new Set(ranked.slice(6));
-    for (const f of FAC) if (spill.has(f.dept)) f.dept = OTHER;
-    keep.push(OTHER);
-  }
-  return keep;
-})();
-const DVAR = Object.fromEntries(DEPTS.map((d, i) => [d, d === OTHER ? "--d-7" : `--d-${i + 1}`]));
+// Departments are single opaque letters in this build. They still group and colour
+// the dots; the letter means nothing without the key held off this page.
+const RANKORDER = ["Assistant Professor", "Associate Professor", "Full Professor", "Professor"];
+const shortRank = r => r.replace(" Professor", "").replace(/^Professor$/, "Full");
+const groupOf = f => f.dept;
+const GROUPS = [...new Set(FAC.map(groupOf))].sort().slice(0, 7);
+const DVAR = Object.fromEntries(GROUPS.map((g, i) => [g, `--d-${Math.min(i + 1, 7)}`]));
 const BANDS = [
   {key:"b0", name:"4/4",            note:"heaviest teaching"},
   {key:"b1", name:"3/4",            note:"one course released"},
@@ -402,7 +393,7 @@ function model(){ return FAC.map(score); }
 
 /* ---------- tiles ---------- */
 function drawTiles(rows){
-  const shown = rows.filter(r => !hidden.has(r.dept));
+  const shown = rows.filter(r => !hidden.has(groupOf(r)));
   const n = shown.length || 1;
   $("#tiles").innerHTML = [0,1,2,3].map(bi => {
     const c = shown.filter(r => r.band === bi).length;
@@ -415,15 +406,15 @@ function drawTiles(rows){
 
 /* ---------- legend ---------- */
 function drawLegend(rows){
-  $("#legend").innerHTML = DEPTS.map(d => {
-    const c = rows.filter(r => r.dept === d).length;
+  $("#legend").innerHTML = GROUPS.map(d => {
+    const c = rows.filter(r => groupOf(r) === d).length;
     return `<button class="lg" data-d="${d}" aria-pressed="${!hidden.has(d)}">
       <i class="dot" style="background:var(${DVAR[d]})"></i>${d}<span class="ct">${c}</span></button>`;
   }).join("");
   $("#legend").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
     const d = b.dataset.d;
     if(hidden.has(d)) hidden.delete(d); else hidden.add(d);
-    if(hidden.size === DEPTS.length) hidden.clear();
+    if(hidden.size === GROUPS.length) hidden.clear();
     render();
   }));
 }
@@ -474,7 +465,7 @@ function drawSwarm(rows){
   const host = $("#plot");
   const W0 = Math.max(560, host.clientWidth || 700);
   const padL = 16, padR = 16, padT = 66, padB = 46;
-  const shown = rows.filter(r => !hidden.has(r.dept));
+  const shown = rows.filter(r => !hidden.has(groupOf(r)));
   const max = axisMax(rows);
   const x = v => padL + (W0 - padL - padR) * (Math.min(v, max) / max);
   const r = shown.length > 45 ? 6 : 7;
@@ -531,7 +522,7 @@ function axisLayer(x, max, y){
   return s;
 }
 function markup(d, cx, cy, r){
-  const col = `var(${DVAR[d.dept]})`;
+  const col = `var(${DVAR[groupOf(d)]})`;
   const base = `<circle class="dot-m" data-n="${d.id}" cx="${cx}" cy="${cy}" r="${r}"`;
   if(d.sa) return base + ` fill="${col}" stroke="var(--swarm-surface)" stroke-width="2"></circle>`;
   return `<g class="dot-m" data-n="${d.id}">
@@ -543,14 +534,14 @@ function drawFacet(rows){
   const host = $("#plot");
   const W0 = Math.max(560, host.clientWidth || 700);
   const padL = 108, padR = 16, padT = 66, padB = 46;
-  const shown = rows.filter(r => !hidden.has(r.dept));
+  const shown = rows.filter(r => !hidden.has(groupOf(r)));
   const max = axisMax(rows);
   const x = v => padL + (W0 - padL - padR) * (Math.min(v, max) / max);
   const r = 6;
-  const groups = DEPTS.filter(d => !hidden.has(d));
+  const groups = GROUPS.filter(d => !hidden.has(d));
   let rowsGeo = [], y = padT;
   for(const d of groups){
-    const items = shown.filter(s => s.dept === d);
+    const items = shown.filter(s => groupOf(s) === d);
     const p = swarm(items, o => x(o.pts), r, 2);
     const half = p.length ? Math.max(...p.map(q => Math.abs(q.y))) : 0;
     const h = Math.max(46, 2*half + 2*r + 14);
@@ -588,9 +579,9 @@ function drawFacet(rows){
 }
 
 function drawTable(rows){
-  const shown = rows.filter(r => !hidden.has(r.dept));
+  const shown = rows.filter(r => !hidden.has(groupOf(r)));
   const get = (r,k) => k === "band" ? r.band : k === "pts" ? r.pts : k === "j" ? r.journals
-      : k === "proc" ? r.procs : k === "id" ? r.id : k === "dept" ? r.dept : k === "rank" ? r.rank : (r.cnt[k] || 0);
+      : k === "proc" ? r.procs : k === "id" ? r.id : k === "dept" ? r.dept : k === "rank" ? RANKORDER.indexOf(r.rank) : (r.cnt[k] || 0);
   const sorted = shown.slice().sort((a,b) => {
     const va = get(a, sortKey), vb = get(b, sortKey);
     if(va < vb) return -sortDir; if(va > vb) return sortDir;
@@ -601,8 +592,8 @@ function drawTable(rows){
   s += cols.map(c => `<th data-k="${c[0]}">${c[1]}${sortKey===c[0] ? (sortDir>0?" \u25b2":" \u25bc") : ""}</th>`).join("");
   s += `</tr></thead><tbody>`;
   for(const r of sorted){
-    s += `<tr><td class="num"><span class="deptdot" style="background:var(${DVAR[r.dept]})"></span>${r.id}</td>
-      <td>${r.dept}</td><td style="color:var(--ink-3)">${r.rank.replace(" Professor","")}</td>`;
+    s += `<tr><td class="num"><span class="deptdot" style="background:var(${DVAR[groupOf(r)]})"></span>${r.id}</td>
+      <td>${r.dept}</td><td style="color:var(--ink-3)">${shortRank(r.rank)}</td>`;
     s += TIERS.map(t => `<td class="num" style="${r.cnt[t]?"":"color:var(--ink-3)"}">${r.cnt[t]||"\u00b7"}</td>`).join("");
     s += `<td class="num ${r.sa?"":"no"}"${r.fwd?` title="includes ${r.fwd} in press, dated 2026"`:""}>${r.journals}${r.fwd?`<span class="fc">${r.fwd}</span>`:""}${r.sa?"":" \u2717"}</td>`;
     s += `<td class="num" style="${r.procs?"color:var(--ink-3)":"color:var(--ink-3)"}" title="proceedings: points but no SA credit">${r.procs||"\u00b7"}</td>`;
@@ -630,7 +621,7 @@ function wireMarks(shown){
       const jbr = line(t => d.cnt[t] - d.pcnt[t]);
       const pbr = line(t => d.pcnt[t]);
       tip.innerHTML = `<div class="nm mono">${d.id}</div>
-        <div class="dl">${d.dept} \u00b7 ${d.rank}</div>
+        <div class="dl">Dept ${d.dept} \u00b7 ${d.rank}</div>
         <div class="kv"><span>Points</span><b>${(+d.pts.toFixed(1))}</b></div>
         <div class="kv"><span>Journal articles</span><b>${d.journals}</b></div>
         <div class="kv"><span>Band</span><b>${BANDS[d.band].name}</b></div>

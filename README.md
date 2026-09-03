@@ -8,10 +8,9 @@ rolling six-year window. Shaded regions are teaching-load bands. You set what an
 A\*, A, B, C, or unrated article is worth, you set where the band boundaries fall,
 and the room re-sorts itself.
 
-**[Open the demo](index.html)** — it runs on synthetic faculty. Department names and
-the house-list journals are real, because they are public and worth seeing in place.
-The people are not: no real individual's record is copied, sampled, or recoverable
-from anything in this repository.
+**[Open it](index.html)** — 63 real tenure-line faculty at one business school, 392
+publications from 2021 on. Names and departments are both stripped. Each person is a
+bare code and a rank.
 
 ## What it does
 
@@ -28,7 +27,7 @@ from anything in this repository.
 - **Unrated for SA only.** Let unrated articles keep somebody Scholarly Academic
   while earning no points toward a release. Staying qualified and earning a release
   are different questions.
-- **Three views.** A combined swarm, small multiples by department, and a sortable
+- **Three views.** A combined swarm, small multiples by rank, and a sortable
   table with the full tier breakdown.
 
 ## Why the unrated weight is the whole model
@@ -45,7 +44,7 @@ house list exists to break that apart.
 
 ## Running it on your own data
 
-The demo is self-contained. To point it at your own faculty:
+The page is self-contained. To point it at your own faculty:
 
 ```bash
 python3 scripts/build_model.py "YourExport.doc" \
@@ -69,7 +68,6 @@ If you are not coming from a Watermark export, skip the parser and write
 [
   {
     "id": "MKT-04",
-    "dept": "Marketing",
     "rank": "Associate Professor",
     "pubs": [
       {"y": 2025, "r": "B",     "t": "j"},
@@ -83,7 +81,7 @@ If you are not coming from a Watermark export, skip the parser and write
 | field | meaning |
 |---|---|
 | `id` | display code. Use a code, not a name. |
-| `dept` | one of at most six; drives the dot colour |
+| `rank` | drives the dot colour and the facet view |
 | `r` | `A*`, `A`, `B`, `C`, or `other` |
 | `t` | `j` journal article, `p` proceedings or chapter |
 | `h` | index into `house.json`, when the outlet is on the house list |
@@ -117,19 +115,21 @@ export has the headers, you do not need any of this.
 ## Handling real data
 
 A build carrying real records is personnel material, whatever the dots are labelled.
-Codes instead of names still leave department, rank, and an exact publication profile
-on screen, which is enough for a colleague to identify several people in a minute.
-Keep those builds out of version control and think about who is in the room.
+A code and a rank still leave an exact publication profile on screen, which is enough
+for a colleague at the same school to place the more prolific people. Keep the
+crosswalk out of version control, and remember the page assigns each person a teaching
+load: that is a model output and an argument worth having, not a decision anyone made.
 
 ## Layout
 
 ```
-index.html                 the demo, built and committed so it can be served
+index.html                 built and committed so it can be served
 template.html              the page, with data placeholders
-data/                      synthetic demo data
+data/faculty.json          published data: code, rank, publications. No names, no departments
+data/house.json            the house-list journals and their counts
 scripts/
-  make_demo_data.py        generates the demo dataset
   build_page.py            folds a dataset into the template
+  make_public_data.py      strips department and reassigns neutral codes
   build_model.py           Watermark export -> de-identified dataset
   parse_vita.py            splits an export into faculty and their entries
   classify.py              journal article vs proceedings
