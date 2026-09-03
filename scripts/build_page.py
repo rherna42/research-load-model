@@ -1,7 +1,7 @@
 """Fold a dataset into template.html and write index.html.
 
-  python3 scripts/build_page.py                          # demo data
-  python3 scripts/build_page.py path/to/data.json path/to/house.json -o private.html
+  python3 scripts/build_page.py                          # data/faculty.json
+  python3 scripts/build_page.py other/data.json other/house.json -o other.html
 """
 import argparse, json, os
 
@@ -21,8 +21,8 @@ def build(data_path, house_path, out_path):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("data", nargs="?", default=os.path.join(ROOT, "data", "demo_data.json"))
-    ap.add_argument("house", nargs="?", default=os.path.join(ROOT, "data", "demo_house.json"))
+    ap.add_argument("data", nargs="?", default=os.path.join(ROOT, "data", "faculty.json"))
+    ap.add_argument("house", nargs="?", default=os.path.join(ROOT, "data", "house.json"))
     ap.add_argument("-o", "--out", default=os.path.join(ROOT, "index.html"))
     a = ap.parse_args()
     build(a.data, a.house, a.out)
